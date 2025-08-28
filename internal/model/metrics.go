@@ -1,8 +1,8 @@
 package models
 
 const (
-	Counter = "counter"
-	Gauge   = "gauge"
+	Counter string = "counter"
+	Gauge   string = "gauge"
 )
 
 // NOTE: Не усложняем пример, вводя иерархическую вложенность структур.
