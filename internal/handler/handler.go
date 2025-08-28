@@ -45,7 +45,7 @@ func (h *Handler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 	metricValue := chi.URLParam(r, "metricValue")
 	err := h.s.SaveMetric(metricName, metricType, metricValue)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		log.Println(err)
 	}
 }
