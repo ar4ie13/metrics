@@ -1,43 +1,61 @@
 package repository
 
 import (
+	"errors"
 	model "github.com/ar4ie13/metrics/internal/model"
-	"github.com/ar4ie13/metrics/internal/service"
 )
 
-// MemStorage is used to store metrics struct in the map
+var (
+	ErrIncorrectMetricType = errors.New("incorrect metric type")
+	ErrIncorrectMetricName = errors.New("unknown metric name")
+)
+
+// MemStorage is used to store Metrics struct in the map
 type MemStorage struct {
-	metrics map[string]model.Metrics
+	Metrics map[string]model.Metrics
 }
 
 func NewMemStorage() *MemStorage {
 	return &MemStorage{
-		metrics: make(map[string]model.Metrics),
+		Metrics: make(map[string]model.Metrics),
 	}
 }
 
 func (m *MemStorage) SaveCounter(metricName string, counter int64) error {
-	if _, ok := m.metrics[metricName]; ok {
-		if m.metrics[metricName].MType != model.Counter {
-			return service.ErrIncorrectMetricType
+	if _, ok := m.Metrics[metricName]; ok {
+		if m.Metrics[metricName].MType != model.Counter {
+			return ErrIncorrectMetricType
 		}
-		*m.metrics[metricName].Delta += counter
+		*m.Metrics[metricName].Delta += counter
 		return nil
 	}
-	m.metrics[metricName] = model.Metrics{MType: model.Counter, Delta: &counter}
+	m.Metrics[metricName] = model.Metrics{ID: metricName, MType: model.Counter, Delta: &counter}
 
 	return nil
 }
 
 func (m *MemStorage) SaveGauge(metricName string, gauge float64) error {
-	if _, ok := m.metrics[metricName]; ok {
-		if m.metrics[metricName].MType != model.Gauge {
-			return service.ErrIncorrectMetricType
+	if _, ok := m.Metrics[metricName]; ok {
+		if m.Metrics[metricName].MType != model.Gauge {
+			return ErrIncorrectMetricType
 		}
-		*m.metrics[metricName].Value = gauge
+		*m.Metrics[metricName].Value = gauge
 		return nil
 	}
-	m.metrics[metricName] = model.Metrics{MType: model.Gauge, Value: &gauge}
+	m.Metrics[metricName] = model.Metrics{ID: metricName, MType: model.Gauge, Value: &gauge}
 
 	return nil
+}
+
+func (m *MemStorage) GetAll() MemStorage {
+	return *m
+}
+
+func (m *MemStorage) GetSpecific(metricName string, metricType string) (model.Metrics, error) {
+	if _, ok := m.Metrics[metricName]; ok {
+		if m.Metrics[metricName].MType == metricType {
+			return m.Metrics[metricName], nil
+		}
+	}
+	return model.Metrics{}, ErrIncorrectMetricName
 }

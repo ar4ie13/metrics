@@ -1,20 +1,23 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	model "github.com/ar4ie13/metrics/internal/model"
+	"github.com/ar4ie13/metrics/internal/repository"
 	"strconv"
 )
 
 var (
-	ErrUnknownMetricType   = errors.New("unknown metric type")
-	ErrIncorrectValueType  = errors.New("incorrect value type")
-	ErrIncorrectMetricType = errors.New("incorrect metric type")
+	ErrUnknownMetricType  = errors.New("unknown metric type")
+	ErrIncorrectValueType = errors.New("incorrect value type")
 )
 
 type Repository interface {
 	SaveCounter(string, int64) error
 	SaveGauge(string, float64) error
+	GetAll() repository.MemStorage
+	GetSpecific(string, string) (model.Metrics, error)
 }
 
 type Service struct {
@@ -50,4 +53,19 @@ func (s *Service) SaveMetric(metricName string, metricType string, value string)
 	}
 
 	return nil
+}
+
+func (s *Service) GetAllMetrics() string {
+	metrics := s.r.GetAll()
+	result, _ := json.MarshalIndent(metrics, "", "\t")
+	return string(result)
+}
+
+func (s *Service) GetSpecificMetric(metricName string, metricType string) (string, error) {
+	metrics, err := s.r.GetSpecific(metricName, metricType)
+	if err != nil {
+		return "", err
+	}
+	result, _ := json.MarshalIndent(metrics, "", "\t")
+	return string(result), nil
 }
