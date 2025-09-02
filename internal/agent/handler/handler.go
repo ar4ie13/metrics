@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type MyApiError struct {
+type MyAPIError struct {
 	Code      int       `json:"code"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`
@@ -44,7 +44,7 @@ func (h *Handler) PostMetrics() {
 		SetRetryWaitTime(30 * time.Second).
 		// длительность максимального ожидания
 		SetRetryMaxWaitTime(90 * time.Second)
-	var responseErr MyApiError
+	var responseErr MyAPIError
 
 	metrics := h.s.GetMetricsStorage()
 	for _, metric := range metrics.Metrics {
