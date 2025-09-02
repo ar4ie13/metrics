@@ -62,10 +62,17 @@ func (s *Service) GetAllMetrics() string {
 }
 
 func (s *Service) GetSpecificMetric(metricName string, metricType string) (string, error) {
+	var result string
 	metrics, err := s.r.GetSpecific(metricName, metricType)
 	if err != nil {
 		return "", err
 	}
-	result, _ := json.MarshalIndent(metrics, "", "\t")
-	return string(result), nil
+	switch metricType {
+	case model.Counter:
+		result = strconv.FormatInt(*metrics.Delta, 10)
+	case model.Gauge:
+		result = strconv.FormatFloat(*metrics.Value, 'f', -1, 64)
+	}
+
+	return result, nil
 }
