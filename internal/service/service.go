@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	model "github.com/ar4ie13/metrics/internal/model"
-	"github.com/ar4ie13/metrics/internal/repository"
 	"strconv"
 )
 
 var (
-	ErrUnknownMetricType  = errors.New("unknown metric type")
 	ErrIncorrectValueType = errors.New("incorrect value type")
+	ErrUnknownMetricType  = errors.New("unknown metric type")
 )
 
 type Repository interface {
 	SaveCounter(string, int64) error
 	SaveGauge(string, float64) error
-	GetAll() repository.MemStorage
+	GetAll() map[string]model.Metrics
 	GetSpecific(string, string) (model.Metrics, error)
 }
 

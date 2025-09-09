@@ -47,8 +47,8 @@ func (m *MemStorage) SaveGauge(metricName string, gauge float64) error {
 	return nil
 }
 
-func (m *MemStorage) GetAll() MemStorage {
-	return *m
+func (m *MemStorage) GetAll() map[string]model.Metrics {
+	return m.Metrics
 }
 
 func (m *MemStorage) GetSpecific(metricName string, metricType string) (model.Metrics, error) {
