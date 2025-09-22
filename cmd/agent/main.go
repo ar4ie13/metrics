@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/ar4ie13/metrics/internal/agent/config"
-	"github.com/ar4ie13/metrics/internal/agent/handler"
+	"github.com/ar4ie13/metrics/internal/agent/requests"
 	"github.com/ar4ie13/metrics/internal/agent/service"
 	"log"
 	"time"
@@ -21,7 +21,7 @@ func run() error {
 	cfg := config.NewAgentConfig()
 	cfg.InitAgentConfig()
 	ms := service.NewMetricsStorage()
-	hndlr := handler.NewHandler(ms, cfg)
+	hndlr := requests.NewHandler(ms, cfg)
 	pollInterval := cfg.GetPollInterval()
 	reportInterval := cfg.GetReportInterval()
 

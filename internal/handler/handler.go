@@ -7,9 +7,9 @@ import (
 )
 
 type Service interface {
-	SaveMetric(string, string, string) error
+	SaveMetric(metricName string, metricType string, value string) error
 	GetAllMetrics() string
-	GetSpecificMetric(string, string) (string, error)
+	GetSpecificMetric(metricName string, metricType string) (string, error)
 }
 
 type Config interface {
