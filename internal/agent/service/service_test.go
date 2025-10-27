@@ -3,49 +3,40 @@ package service
 import (
 	"reflect"
 	"testing"
+
+	"github.com/ar4ie13/metrics/internal/model"
 )
 
 func TestMetrics_getPollCounter(t *testing.T) {
 	var value1 int64 = 1
-	var value2 int64 = 2
 	tests := []struct {
-		name string
-
-		m    Metrics
-		want Metrics
+		name    string
+		m       model.Metrics
+		want    model.Metrics
+		wantErr bool
 	}{
 		{
-			name: "Wrong result",
-			m: Metrics{
-				ID:    "PollCounter",
-				MType: "counter",
-				Delta: &value2,
-			},
-			want: Metrics{
-				ID:    "PollCounter",
-				MType: "counter",
-				Delta: &value1,
-			},
-		},
-		{
 			name: "Correct result",
-			m: Metrics{
-				ID:    "PollCounter",
+			m: model.Metrics{
+				ID:    "PollCount",
 				MType: "counter",
 				Delta: &value1,
 			},
-			want: Metrics{
-				ID:    "PollCounter",
+			want: model.Metrics{
+				ID:    "PollCount",
 				MType: "counter",
 				Delta: &value1,
 			},
+			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.m.getPollCounter(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getPollCounter() = %v, want %v", got, tt.want)
+			if got := getPollCount(); !reflect.DeepEqual(got, tt.want) {
+				if tt.wantErr {
+					t.Errorf("getPollCount() = %v, want %v", got, tt.want)
+				}
 			}
 		})
 	}

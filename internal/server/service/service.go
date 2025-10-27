@@ -3,11 +3,15 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	model "github.com/ar4ie13/metrics/internal/model"
 	"strconv"
+
+	model "github.com/ar4ie13/metrics/internal/model"
 )
 
 var (
+	ErrIncorrectMetricType = errors.New("incorrect metric type")
+	ErrIncorrectMetricName = errors.New("unknown metric name")
+
 	ErrIncorrectValueType = errors.New("incorrect value type")
 	ErrUnknownMetricType  = errors.New("unknown metric type")
 )
@@ -54,10 +58,10 @@ func (s *Service) SaveMetric(metricName string, metricType string, value string)
 	return nil
 }
 
-func (s *Service) GetAllMetrics() string {
+func (s *Service) GetAllMetrics() (string, error) {
 	metrics := s.r.GetAll()
-	result, _ := json.MarshalIndent(metrics, "", "\t")
-	return string(result)
+	result, err := json.MarshalIndent(metrics, "", "\t")
+	return string(result), err
 }
 
 func (s *Service) GetSpecificMetric(metricName string, metricType string) (string, error) {

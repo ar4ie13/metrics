@@ -2,14 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	handlerConfig "github.com/ar4ie13/metrics/internal/server/handler/config"
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MetricsTest struct {
@@ -20,12 +22,7 @@ type MetricsTest struct {
 }
 
 type MockConfig struct {
-	localServerAddr string
-}
-
-func (c *MockConfig) GetLocalServerAddr() string {
-	c.localServerAddr = "localhost:8080"
-	return c.localServerAddr
+	handlerConfig handlerConfig.Config
 }
 
 type MockService struct {
@@ -33,12 +30,12 @@ type MockService struct {
 	err        error
 }
 
-func (s *MockService) GetAllMetrics() string {
+func (s *MockService) GetAllMetrics() (string, error) {
 	result, err := json.Marshal(s.allMetrics)
 	if err != nil {
 		panic(err)
 	}
-	return string(result)
+	return string(result), nil
 }
 func (s *MockService) GetSpecificMetric(metricName string, metricType string) (string, error) {
 	if _, ok := s.allMetrics[metricName]; ok {
@@ -101,8 +98,8 @@ func TestHandler_GetAllMetrics(t *testing.T) {
 		s := &MockService{
 			allMetrics: v.fields.allMetrics,
 		}
-		c := new(MockConfig)
-		h := NewHandler(s, c)
+		c := MockConfig{handlerConfig: handlerConfig.Config{LocalServerAddr: "localhost:8080"}}
+		h := NewHandler(s, c.handlerConfig)
 		router := chi.NewRouter()
 		router.Get("/", h.GetAllMetrics)
 		ts := httptest.NewServer(router)

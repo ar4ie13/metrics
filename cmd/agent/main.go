@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"time"
+
 	"github.com/ar4ie13/metrics/internal/agent/config"
 	"github.com/ar4ie13/metrics/internal/agent/requests"
 	"github.com/ar4ie13/metrics/internal/agent/service"
-	"log"
-	"time"
 )
 
 func main() {
@@ -19,24 +21,35 @@ func main() {
 func run() error {
 
 	cfg := config.NewAgentConfig()
-	cfg.InitAgentConfig()
-	ms := service.NewMetricsStorage()
-	hndlr := requests.NewHandler(ms, cfg)
-	pollInterval := cfg.GetPollInterval()
-	reportInterval := cfg.GetReportInterval()
+	srv := service.NewService()
+	hndlr := requests.NewRequests(srv, *cfg)
 
-	collectTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
-	sendTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
-	log.Printf("Server endpoint: %s\nPoll interval: %d\nReport interval: %d\n\n", cfg.GetEndpointServerAddr(), pollInterval, reportInterval)
+	sendMetrics(*cfg, *srv, *hndlr)
+
+	return nil
+}
+
+func sendMetrics(cfg config.AgentConfig, srv service.Service, hndlr requests.Requests) {
+	collectTicker := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
+	sendTicker := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	log.Printf("Server endpoint: %s\nPoll interval: %d\nReport interval: %d\n\n", cfg.EndpointServerAddr,
+		cfg.PollInterval, cfg.ReportInterval)
 	for {
 		select {
 		case <-collectTicker.C:
 			log.Println("Collecting metrics")
-			ms.UpdateMetrics()
+
+			srv.UpdateMetrics()
+
+			if a, ok := srv.Metrics["PollCount"]; ok {
+				fmt.Println(*a.Delta)
+			}
+
 		case <-sendTicker.C:
 			log.Println("Sending metrics")
+
 			hndlr.PostMetrics()
+			srv.ResetPollCount()
 		}
 	}
-
 }

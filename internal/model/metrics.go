@@ -1,10 +1,11 @@
-package models
+package model
 
 const (
 	Counter string = "counter"
 	Gauge   string = "gauge"
 )
 
+// Metrics is a structure to store metrics values
 // NOTE: Не усложняем пример, вводя иерархическую вложенность структур.
 // Органичиваясь плоской моделью.
 // Delta и Value объявлены через указатели,

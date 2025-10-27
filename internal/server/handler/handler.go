@@ -1,27 +1,25 @@
 package handler
 
 import (
-	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+
+	handlerConfig "github.com/ar4ie13/metrics/internal/server/handler/config"
+	"github.com/go-chi/chi/v5"
 )
 
 type Service interface {
 	SaveMetric(metricName string, metricType string, value string) error
-	GetAllMetrics() string
+	GetAllMetrics() (string, error)
 	GetSpecificMetric(metricName string, metricType string) (string, error)
 }
 
-type Config interface {
-	GetLocalServerAddr() string
-}
-
 type Handler struct {
-	s Service
-	c Config
+	service Service
+	config  handlerConfig.Config
 }
 
-func NewHandler(s Service, c Config) *Handler {
+func NewHandler(s Service, c handlerConfig.Config) *Handler {
 	return &Handler{s, c}
 }
 
@@ -33,10 +31,11 @@ func (h *Handler) ListenAndServe() error {
 	router.Get("/value/{metricType}/{metricName}", h.GetMetric)
 	router.Post("/update/{metricType}/{metricName}/{metricValue}", h.PostUpdate)
 
-	log.Println("Listening on", h.c.GetLocalServerAddr())
-	if err := http.ListenAndServe(h.c.GetLocalServerAddr(), router); err != nil {
+	log.Println("Listening on", h.config.LocalServerAddr)
+	if err := http.ListenAndServe(h.config.LocalServerAddr, router); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -47,7 +46,7 @@ func (h *Handler) PostUpdate(w http.ResponseWriter, r *http.Request) {
 	metricName := chi.URLParam(r, "metricName")
 	metricType := chi.URLParam(r, "metricType")
 	metricValue := chi.URLParam(r, "metricValue")
-	err := h.s.SaveMetric(metricName, metricType, metricValue)
+	err := h.service.SaveMetric(metricName, metricType, metricValue)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Println(err)
@@ -60,7 +59,7 @@ func (h *Handler) GetAllMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := h.s.GetAllMetrics()
+	result, _ := h.service.GetAllMetrics()
 	_, err := w.Write([]byte(result))
 	if err != nil {
 		log.Println(err)
@@ -76,7 +75,7 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	}
 	metricName := chi.URLParam(r, "metricName")
 	metricType := chi.URLParam(r, "metricType")
-	metric, err := h.s.GetSpecificMetric(metricName, metricType)
+	metric, err := h.service.GetSpecificMetric(metricName, metricType)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

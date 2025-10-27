@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/ar4ie13/metrics/internal/config"
-	"github.com/ar4ie13/metrics/internal/handler"
-	"github.com/ar4ie13/metrics/internal/repository"
-	"github.com/ar4ie13/metrics/internal/service"
 	"log"
+
+	"github.com/ar4ie13/metrics/internal/server/config"
+	"github.com/ar4ie13/metrics/internal/server/handler"
+	"github.com/ar4ie13/metrics/internal/server/repository"
+	"github.com/ar4ie13/metrics/internal/server/service"
 )
 
 func main() {
@@ -16,10 +17,9 @@ func main() {
 
 func Run() error {
 	cfg := config.NewConfig()
-	cfg.InitConfig()
 	repo := repository.NewMemStorage()
 	srv := service.NewService(repo)
-	hndlr := handler.NewHandler(srv, cfg)
+	hndlr := handler.NewHandler(srv, cfg.HandlerConfig)
 
 	if err := hndlr.ListenAndServe(); err != nil {
 		return err

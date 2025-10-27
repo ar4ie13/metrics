@@ -2,11 +2,13 @@ package requests
 
 import (
 	"fmt"
-	"github.com/ar4ie13/metrics/internal/agent/service"
-	"github.com/go-resty/resty/v2"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/ar4ie13/metrics/internal/agent/config"
+	"github.com/ar4ie13/metrics/internal/agent/service"
+	"github.com/go-resty/resty/v2"
 )
 
 type MyAPIError struct {
@@ -16,49 +18,43 @@ type MyAPIError struct {
 }
 
 type Service interface {
-	GetMetricsStorage() *service.MetricsStorage
+	GetMetricsStorage() *service.Service
 }
 
-type AgentConfig interface {
-	GetEndpointServerAddr() string
-	GetPollInterval() int
-	GetReportInterval() int
+type Requests struct {
+	service Service
+	config  *config.AgentConfig
 }
 
-type Handler struct {
-	s Service
-	c AgentConfig
-}
-
-func NewHandler(s Service, c AgentConfig) *Handler {
-	return &Handler{
-		s: s,
-		c: c,
+func NewRequests(s Service, c config.AgentConfig) *Requests {
+	return &Requests{
+		service: s,
+		config:  &c,
 	}
 }
 
-func (h *Handler) PostMetrics() {
+func (h *Requests) PostMetrics() {
 	client := resty.New()
 	client.SetRetryCount(3).
 		// длительность ожидания между попытками
-		SetRetryWaitTime(30 * time.Second).
+		SetRetryWaitTime(5 * time.Second).
 		// длительность максимального ожидания
-		SetRetryMaxWaitTime(90 * time.Second)
+		SetRetryMaxWaitTime(15 * time.Second)
 	var responseErr MyAPIError
 
-	metrics := h.s.GetMetricsStorage()
+	metrics := h.service.GetMetricsStorage()
 	for _, metric := range metrics.Metrics {
 		var valueString string
 		if metric.MType == "gauge" && metric.Value != nil {
 			valueString = strconv.FormatFloat(*metric.Value, 'f', -1, 64)
-			url := fmt.Sprintf("http://%s/update/%s/%s/%s", h.c.GetEndpointServerAddr(), metric.MType, metric.ID, valueString)
+			url := fmt.Sprintf("http://%s/update/%s/%s/%s", h.config.EndpointServerAddr, metric.MType, metric.ID, valueString)
 			_, err := client.R().SetError(&responseErr).Post(url)
 			if err != nil {
 				log.Print(err)
 			}
 		} else if metric.MType == "counter" && metric.Delta != nil {
 			valueString = strconv.FormatInt(*metric.Delta, 10)
-			url := fmt.Sprintf("http://%s/update/%s/%s/%s", h.c.GetEndpointServerAddr(), metric.MType, metric.ID, valueString)
+			url := fmt.Sprintf("http://%s/update/%s/%s/%s", h.config.EndpointServerAddr, metric.MType, metric.ID, valueString)
 			_, err := client.R().SetError(&responseErr).Post(url)
 			if err != nil {
 				log.Print(err)
