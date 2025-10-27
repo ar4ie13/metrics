@@ -108,6 +108,7 @@ func TestHandler_GetAllMetrics(t *testing.T) {
 
 		assert.Equal(t, v.expectedStatus, resp.StatusCode)
 		assert.Equal(t, v.expectedValue, get)
+		resp.Body.Close()
 		ts.Close()
 	}
 
