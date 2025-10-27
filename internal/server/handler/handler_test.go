@@ -103,11 +103,12 @@ func TestHandler_GetAllMetrics(t *testing.T) {
 		router := chi.NewRouter()
 		router.Get("/", h.GetAllMetrics)
 		ts := httptest.NewServer(router)
-		defer ts.Close()
+
 		resp, get := testRequest(t, ts, "GET", v.url)
 
 		assert.Equal(t, v.expectedStatus, resp.StatusCode)
 		assert.Equal(t, v.expectedValue, get)
+		ts.Close()
 	}
 
 }
